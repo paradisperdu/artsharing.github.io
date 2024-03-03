@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Art Sharing</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Arial", sans-serif;
+            background-color: #fafafa;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        #title {
+            font-size: 2em;
+            margin-top: 20px;
+            color: #333;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        #form-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 800px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        input[type="text"], input[type="file"], textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="text"]::placeholder, input[type="file"]::placeholder, textarea::placeholder {
+            color: #666;
+        }
+
+        input[type="file"] {
+            cursor: pointer;
+        }
+
+        input[type="submit"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            background-color: #0095f6;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0077c0;
+        }
+
+        #messages {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .message {
+            margin: 10px;
+            flex: 0 0 calc(33.33% - 20px);
+            max-width: calc(33.33% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .message:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .message p {
+            font-size: 14px;
+            margin: 5px 0;
+            color: #000;
+        }
+
+        .message p.description {
+            font-style: italic;
+            color: #666;
+        }
+
+        .message img {
+            width: 100%;
+            height: auto;
+            border-radius: 5px;
+            transition: transform 0.3s;
+        }
+
+        .message:hover img {
+            transform: scale(1.05);
+        }
+
+        .like-button {
+            cursor: pointer;
+            color: #007bff;
+            margin-right: 10px;
+        }
+
+        .like-button.liked {
+            color: #e6192e;
+        }
+
+        .like-count {
+            color: #666;
+        }
+
+        .comment-form {
+            margin-top: 10px;
+        }
+
+        .comment-form input[type="text"] {
+            width: calc(100% - 20px);
+        }
+
+        .comment-form input[type="submit"] {
+            width: calc(100% - 20px);
+            margin-top: 5px;
+        }
+
+        .comments {
+            margin-top: 10px;
+        }
+
+        .comments .comment {
+            border-top: 1px solid #ddd;
+            padding-top: 5px;
+            margin-top: 5px;
+            font-size: 14px;
+            position: relative;
+            color: #000;
+        }
+
+        .comments .comment:last-child {
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="title">Art Sharing</h1>
+    <div id="form-container">
+        <form id="art-form">
+            <input type="text" id="pseudo" placeholder="Votre pseudo">
+            <input type="file" id="art-file" accept="image/*" placeholder="Choisir une image">
+            <textarea id="art-description" placeholder="Description de votre photo"></textarea>
+            <input type="submit" value="Envoyer">
+        </form>
+    </div>
+
+    <div id="messages"></div>
+
+    <script>
+        // Variable pour stocker les commentaires
+        var comments = {};
+
+        // Variable pour stocker les likes
+        var likes = {};
+
+        // Fonction pour ajouter un commentaire
+        function addComment(messageId, commentText, commenter) {
+            if (!comments[messageId]) {
+                comments[messageId] = [];
+            }
+            comments[messageId].push({
+                text: commentText,
+                commenter: commenter
+            });
+            refreshComments(messageId);
+        }
+
+        // Fonction pour liker un message
+        function likeMessage(messageId) {
+            if (!likes[messageId]) {
+                likes[messageId] = 1;
+            } else {
+                likes[messageId]++;
+            }
+            refreshLikes(messageId);
+        }
+
+        // Fonction pour rafraîchir les likes
+        function refreshLikes(messageId) {
+            var likeButton = document.getElementById("like-button-" + messageId);
+            var likeCount = document.getElementById("like-count-" + messageId);
+            likeButton.textContent = "Like";
+            likeButton.classList.remove('liked');
+            if (likes[messageId]) {
+                likeCount.textContent = likes[messageId] + " Like(s)";
+            } else {
+                likeCount.textContent = "0 Like";
+            }
+        }
+
+        // Fonction pour rafraîchir les commentaires
+        function refreshComments(messageId) {
+            var commentsSection = document.getElementById("comments-" + messageId);
+            if (!commentsSection) {
+                return;
+            }
+            commentsSection.innerHTML = '';
+            if (!comments[messageId]) {
+                return;
+            }
+            comments[messageId].forEach(function(comment) {
+                var commentDiv = document.createElement('div');
+                commentDiv.classList.add('comment');
+                commentDiv.textContent = comment.commenter + ": " + comment.text;
+                commentsSection.appendChild(commentDiv);
+            });
+        }
+
+        document.getElementById("art-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            var pseudo = document.getElementById("pseudo").value;
+            var fileInput = document.getElementById("art-file");
+            var file = fileInput.files[0];
+            var description = document.getElementById("art-description").value;
+            if (pseudo.trim() !== '' && file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var messageId = new Date().getTime(); // ID unique pour chaque message
+                    var message = '<div class="message" id="message-' + messageId + '">';
+                    message += '<p><strong>' + pseudo + ':</strong></p>';
+                    message += '<img src="' + e.target.result + '" alt="Artwork">';
+                    if (description.trim() !== '') {
+                        message += '<p class="description">' + description + '</p>';
+                    }
+                    message += '<button class="like-button" id="like-button-' + messageId + '">Like</button>';
+                    message += '<span class="like-count" id="like-count-' + messageId + '">0 Like</span>';
+                    message += '<div class="comment-form">';
+                    message += '<input type="text" class="comment-input" placeholder="Ajouter un commentaire">';
+                    message += '<input type="submit" class="comment-submit" value="Envoyer">';
+                    message += '</div>';
+                    message += '<div class="comments" id="comments-' + messageId + '"></div>';
+                    message += '</div>';
+                    document.getElementById("messages").innerHTML = message + document.getElementById("messages").innerHTML;
+                    document.getElementById("art-form").reset();
+                    document.getElementById("like-button-" + messageId).addEventListener("click", function() {
+                        likeMessage(messageId);
+                    });
+                    var commentForm = document.getElementById("message-" + messageId).getElementsByClassName("comment-form")[0];
+                    var commentInput = commentForm.getElementsByClassName("comment-input")[0];
+                    commentForm.addEventListener("submit", function(event) {
+                        event.preventDefault();
+                        var commentText = commentInput.value;
+                        if (commentText.trim() !== '') {
+                            addComment(messageId, commentText, pseudo);
+                            commentInput.value = '';
+                        }
+                    });
+                }
+                reader.readAsDataURL(file);
+            } else {
+                alert("Veuillez remplir tous les champs.");
+            }
+        });
+    </script>
+</body>
+</html>
